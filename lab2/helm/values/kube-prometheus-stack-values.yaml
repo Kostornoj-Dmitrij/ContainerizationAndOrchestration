@@ -47,20 +47,7 @@ alertmanager:
       limits:
         cpu: 200m
         memory: 256Mi
-  config:
-    global:
-      resolve_timeout: 5m
-    route:
-      group_by: [ 'alertname', 'namespace' ]
-      group_wait: 10s
-      group_interval: 30s
-      repeat_interval: 5m
-      receiver: 'webhook'
-    receivers:
-      - name: 'webhook'
-        webhook_configs:
-          - url: 'WEBHOOK_URL'
-            send_resolved: true
+    configSecret: alertmanager-config
 
 nodeExporter:
   enabled: true
