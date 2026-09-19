@@ -21,4 +21,4 @@ otel:
   endpoint: "http://jaeger-collector.observability.svc.cluster.local:4317"
 
 serviceMonitor:
-  enabled: false
+  enabled: true
