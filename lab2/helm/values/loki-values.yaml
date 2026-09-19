@@ -36,7 +36,8 @@ singleBinary:
       cpu: 500m
       memory: 1Gi
   persistence:
-    enabled: false
+    enabled: true
+    size: 5Gi
 
 backend:
   replicas: 0
@@ -54,4 +55,10 @@ gateway:
   enabled: false
 
 minio:
+  enabled: false
+
+chunksCache:
+  enabled: false
+
+resultsCache:
   enabled: false
