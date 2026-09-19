@@ -1,0 +1,75 @@
+﻿controller:
+  type: daemonset
+
+alloy:
+  configMap:
+    create: true
+    content: |
+      // Источник: discovery — находим все поды в кластере
+      discovery.kubernetes "pods" {
+        role = "pod"
+      }
+
+      // Релейбл: добавляем labels pod/namespace/container к логам
+      discovery.relabel "pods" {
+        targets = discovery.kubernetes.pods.targets
+
+        rule {
+          source_labels = ["__meta_kubernetes_pod_name"]
+          target_label  = "pod"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_container_name"]
+          target_label  = "container"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_namespace"]
+          target_label  = "namespace"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_node_name"]
+          target_label  = "node"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_app"]
+          target_label  = "app"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+          target_label  = "app"
+        }
+      }
+
+      // Источник: читаем stdout/stderr подов через Kubernetes API
+      loki.source.kubernetes "pods" {
+        targets    = discovery.relabel.pods.output
+        forward_to = [loki.write.default.receiver]
+      }
+
+      // Назначение: отправляем в Loki
+      loki.write "default" {
+        endpoint {
+          url = "http://loki.monitoring.svc.cluster.local:3100/loki/api/v1/push"
+        }
+      }
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+  mounts:
+    varlog: true
+
+serviceAccount:
+  create: true
+  name: alloy
+
+rbac:
+  create: true
+
+serviceMonitor:
+  enabled: false
