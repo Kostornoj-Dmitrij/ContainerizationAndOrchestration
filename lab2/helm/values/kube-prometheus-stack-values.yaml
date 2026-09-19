@@ -47,6 +47,20 @@ alertmanager:
       limits:
         cpu: 200m
         memory: 256Mi
+  config:
+    global:
+      resolve_timeout: 5m
+    route:
+      group_by: [ 'alertname', 'namespace' ]
+      group_wait: 10s
+      group_interval: 30s
+      repeat_interval: 5m
+      receiver: 'webhook'
+    receivers:
+      - name: 'webhook'
+        webhook_configs:
+          - url: 'WEBHOOK_URL'
+            send_resolved: true
 
 nodeExporter:
   enabled: true
@@ -80,3 +94,42 @@ kubeScheduler:
 
 kubeProxy:
   enabled: false
+
+additionalPrometheusRulesMap:
+  api-alerts:
+    groups:
+      - name: api.rules
+        rules:
+          - alert: ApiHighErrorRate
+            expr: |
+              sum(rate(http_requests_total{job="api", status=~"5.."}[5m]))
+                /
+              sum(rate(http_requests_total{job="api"}[5m]))
+                > 0.05
+            for: 1m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Высокая доля 5xx у api ({{ $value | humanizePercentage }})"
+              description: "Больше 5% запросов к api за последние 5 минут возвращают 5xx. Пользователи видят ошибки."
+
+          - alert: ApiHighLatencyP95
+            expr: |
+              histogram_quantile(0.95,
+                sum by (le) (rate(http_request_duration_seconds_bucket{job="api", exported_endpoint!="/slow"}[5m]))
+              ) > 1.0
+            for: 2m
+            labels:
+              severity: warning
+            annotations:
+              summary: "p95 времени ответа api выше 1с ({{ $value | humanizeDuration }})"
+              description: "95-й процентиль времени ответа api превышает 1 секунду (без /slow). У 5% пользователей запросы висят долго."
+
+          - alert: ApiDown
+            expr: sum(up{job="api"}) < 1
+            for: 1m
+            labels:
+              severity: critical
+            annotations:
+              summary: "api недоступен"
+              description: "Prometheus не получает метрики ни от одного пода api - сервис полностью недоступен."

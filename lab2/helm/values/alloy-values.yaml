@@ -5,12 +5,10 @@ alloy:
   configMap:
     create: true
     content: |
-      // Источник: discovery — находим все поды в кластере
       discovery.kubernetes "pods" {
         role = "pod"
       }
 
-      // Релейбл: добавляем labels pod/namespace/container к логам
       discovery.relabel "pods" {
         targets = discovery.kubernetes.pods.targets
 
@@ -40,13 +38,11 @@ alloy:
         }
       }
 
-      // Источник: читаем stdout/stderr подов через Kubernetes API
       loki.source.kubernetes "pods" {
         targets    = discovery.relabel.pods.output
         forward_to = [loki.write.default.receiver]
       }
 
-      // Назначение: отправляем в Loki
       loki.write "default" {
         endpoint {
           url = "http://loki.monitoring.svc.cluster.local:3100/loki/api/v1/push"
