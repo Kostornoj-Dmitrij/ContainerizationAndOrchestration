@@ -7,12 +7,31 @@ image:
 
 configMap:
   enabled: true
-  rawConfig: |
+  rawConfig:
     alertmanager:
+      interval: 30s
       servers:
         - name: monitoring
           uri: http://kube-prom-kube-prometheus-alertmanager.monitoring.svc.cluster.local:9093
           timeout: 10s
+    annotations:
+      default:
+        hidden: false
+    filters:
+      default: []
+    labels:
+      color:
+        static:
+          - job
+        unique:
+          - cluster
+          - instance
+    listen:
+      address: "0.0.0.0"
+      port: 8080
+    log:
+      config: true
+      level: warning
 
 service:
   type: ClusterIP
