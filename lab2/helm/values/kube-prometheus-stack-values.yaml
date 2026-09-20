@@ -113,7 +113,7 @@ additionalPrometheusRulesMap:
               description: "95-й процентиль времени ответа api превышает 1 секунду (без /slow). У 5% пользователей запросы висят долго."
 
           - alert: ApiDown
-            expr: sum(up{job="api"}) < 1
+            expr: absent(up{job="api"}) or (sum(up{job="api"}) < 1)
             for: 1m
             labels:
               severity: critical
