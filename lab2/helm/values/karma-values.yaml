@@ -1,0 +1,28 @@
+﻿replicaCount: 1
+
+image:
+  repository: ghcr.io/prymitive/karma
+  tag: v0.131
+  pullPolicy: IfNotPresent
+
+configMap:
+  enabled: true
+  rawConfig: |
+    alertmanager:
+      servers:
+        - name: monitoring
+          uri: http://kube-prom-kube-prometheus-alertmanager.monitoring.svc.cluster.local:9093
+          timeout: 10s
+
+service:
+  type: ClusterIP
+  port: 8080
+  targetPort: 8080
+
+resources:
+  requests:
+    cpu: 20m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 256Mi
