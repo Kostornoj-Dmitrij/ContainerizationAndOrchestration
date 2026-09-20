@@ -121,6 +121,7 @@ async def health():
 
 @app.get("/fail")
 async def fail():
+    await asyncio.sleep(1.5)
     span = trace.get_current_span()
     span.set_status(Status(StatusCode.ERROR, "intentional failure"))
     span.set_attribute("error.type", "IntentionalError")
