@@ -1,0 +1,33 @@
+services:
+  mcp-filesystem:
+    build: .
+    container_name: mcp-filesystem
+    restart: unless-stopped
+    networks:
+      - lab7-net
+    volumes:
+      - ../mock-data:/data
+    command: >
+      mcp-proxy --host 0.0.0.0 --port 8081 --
+      mcp-server-filesystem /data
+
+  mcp-memory:
+    build: .
+    container_name: mcp-memory
+    restart: unless-stopped
+    networks:
+      - lab7-net
+    volumes:
+      - memory-data:/memory
+    command: >
+      mcp-proxy --host 0.0.0.0 --port 8082 --
+      mcp-server-memory
+    environment:
+      MEMORY_FILE_PATH: /memory/memory.json
+
+networks:
+  lab7-net:
+    external: true
+
+volumes:
+  memory-data:
