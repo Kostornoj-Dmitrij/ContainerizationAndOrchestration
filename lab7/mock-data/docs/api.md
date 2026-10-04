@@ -1,4 +1,4 @@
-﻿# Service: api (Backend API)
+# Service: api (Backend API)
 
 ## Owner
 - **Team:** Backend Team

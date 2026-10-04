@@ -1,4 +1,4 @@
-﻿# Service: worker (Background Worker)
+# Service: worker (Background Worker)
 
 ## Owner
 - **Team:** Platform Team

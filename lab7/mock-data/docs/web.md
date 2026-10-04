@@ -1,4 +1,4 @@
-﻿# Service: web (Frontend)
+# Service: web (Frontend)
 
 ## Owner
 - **Team:** Frontend Team
