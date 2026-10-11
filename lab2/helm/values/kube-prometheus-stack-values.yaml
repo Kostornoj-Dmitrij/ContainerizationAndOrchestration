@@ -21,7 +21,7 @@
       - job_name: cadvisor
         scrape_interval: 15s
         static_configs:
-          - targets: [ '192.168.1.108:8080' ]
+          - targets: [ '192.168.1.108:8081' ]
 
 grafana:
   service:
