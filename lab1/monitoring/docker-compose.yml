@@ -6,6 +6,9 @@ services:
     privileged: true
     ports:
       - "8081:8080"
+    command:
+      - '--docker_only=true'
+      - '--housekeeping_interval=10s'
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:ro
