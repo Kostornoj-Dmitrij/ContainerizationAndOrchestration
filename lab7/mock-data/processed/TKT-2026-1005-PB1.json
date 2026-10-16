@@ -1,0 +1,1 @@
+"{\n  \"ticket_id\": \"TKT-2026-1005-PB1\",\n  \"type\": \"bug\",\n  \"service\": \"api\",\n  \"severity\": \"high\",\n  \"confidence\": 0.85,\n  \"action\": \"duplicate\",\n  \"assignee\": \"dmitry@taskflow.io\",\n  \"related_issue\": \"TF-102\"\n}"
