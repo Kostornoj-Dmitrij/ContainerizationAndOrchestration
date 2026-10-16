@@ -1,0 +1,122 @@
+﻿prometheus:
+  service:
+    type: NodePort
+    nodePort: 30001
+  prometheusSpec:
+    retention: 6h
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+    serviceMonitorNamespaceSelector: {}
+    podMonitorNamespaceSelector: {}
+    ruleNamespaceSelector: {}
+
+grafana:
+  service:
+    type: NodePort
+    nodePort: 30000
+  adminPassword: admin
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  additionalDataSources: []
+  sidecar:
+    datasources:
+      enabled: true
+
+alertmanager:
+  service:
+    type: NodePort
+    nodePort: 30003
+  alertmanagerSpec:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi
+    configSecret: alertmanager-config
+
+nodeExporter:
+  enabled: true
+
+kubeStateMetrics:
+  enabled: true
+
+prometheusOperator:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+kubelet:
+  enabled: true
+
+coreDns:
+  enabled: true
+
+kubeApiServer:
+  enabled: true
+
+kubeControllerManager:
+  enabled: false
+
+kubeScheduler:
+  enabled: false
+
+kubeProxy:
+  enabled: false
+
+additionalPrometheusRulesMap:
+  api-alerts:
+    groups:
+      - name: api.rules
+        rules:
+          - alert: ApiHighErrorRate
+            expr: |
+              sum(rate(http_requests_total{job="api", status=~"5.."}[5m]))
+                /
+              sum(rate(http_requests_total{job="api"}[5m]))
+                > 0.05
+            for: 1m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Высокая доля 5xx у api ({{ $value | humanizePercentage }})"
+              description: "Больше 5% запросов к api за последние 5 минут возвращают 5xx. Пользователи видят ошибки."
+
+          - alert: ApiHighLatencyP95
+            expr: |
+              histogram_quantile(0.95,
+                sum by (le) (rate(http_request_duration_seconds_bucket{job="api", exported_endpoint!="/slow"}[5m]))
+              ) > 1.0
+            for: 2m
+            labels:
+              severity: warning
+            annotations:
+              summary: "p95 времени ответа api выше 1с ({{ $value | humanizeDuration }})"
+              description: "95-й процентиль времени ответа api превышает 1 секунду (без /slow). У 5% пользователей запросы висят долго."
+
+          - alert: ApiDown
+            expr: absent(up{job="api"}) or (sum(up{job="api"}) < 1)
+            for: 1m
+            labels:
+              severity: critical
+            annotations:
+              summary: "api недоступен"
+              description: "Prometheus не получает метрики ни от одного пода api - сервис полностью недоступен."
