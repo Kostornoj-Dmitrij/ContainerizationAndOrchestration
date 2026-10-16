@@ -1,0 +1,56 @@
+﻿provisionDataStore:
+  cassandra: false
+  elasticsearch: false
+  kafka: false
+
+storage:
+  type: badger
+  badger:
+    ephemeral: true
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+collector:
+  enabled: true
+  replicaCount: 1
+  service:
+    otlp:
+      grpc:
+        name: otlp-grpc
+        port: 4317
+      http:
+        name: otlp-http
+        port: 4318
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+query:
+  enabled: true
+  replicaCount: 1
+  service:
+    type: NodePort
+    nodePort: 30002
+    port: 16686
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+agent:
+  enabled: false
+
+serviceAccount:
+  create: false
