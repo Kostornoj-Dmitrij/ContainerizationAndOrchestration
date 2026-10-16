@@ -1,0 +1,402 @@
+{
+  "name": "TaskFlow Ticket Triage",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ticket",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        224,
+        288
+      ],
+      "id": "c3fd5a25-9c33-4d33-8c34-eab9f4c3a616",
+      "name": "Webhook: новый тикет",
+      "webhookId": "e4b984e3-ed6b-4ee1-8c33-b3948ab65bd2"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($('AI Agent').item.json.output) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1648,
+        288
+      ],
+      "id": "14f61fa6-26a7-4c0e-bab9-cac3cce2603f",
+      "name": "Ответ клиенту"
+    },
+    {
+      "parameters": {
+        "model": "qwen2.5:3b",
+        "options": {
+          "temperature": 0
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        752,
+        496
+      ],
+      "id": "e4c9840c-5e5e-4bbd-821b-c60f49abfe95",
+      "name": "LLM: Qwen2.5-3B (Ollama)",
+      "credentials": {
+        "ollamaApi": {
+          "id": "3cR2NA1o8Pe76Z69",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=ТИКЕТ:\n{{ JSON.stringify($('Webhook: новый тикет').item.json.body, null, 2) }}\n\nДОКУМЕНТАЦИЯ:\n{{ $('read docs').item.json.structuredContent.content }}\n\nОТКРЫТЫЕ ISSUES:\n{{ $('read issues').item.json.structuredContent.content }}\n\nВерни JSON.",
+        "options": {
+          "systemMessage": "Ты - ассистент триажа тикетов TaskFlow. Твоя задача - проанализировать тикет и вернуть JSON.\n\nТебе даны:\n- Тикет (title, description)\n- Документация сервиса\n- Список открытых issues\n\nЗАДАЧА:\n1. Определи type: bug | feature | question\n2. Определи service: web | api | worker\n3. Определи severity: low | medium | high | critical\n4. Определи confidence (0.0–1.0)\n5. Найди дубликат: если в issues есть похожий тикет - action=\"duplicate\", related_issue=<ID>\n6. Иначе если type=\"bug\" - action=\"new_bug\"\n7. Определи assignee из документации сервиса\n8. Сформируй summary (2-3 предложения на русском)\n\nВерни ТОЛЬКО валидный JSON без markdown:\n\n{\n  \"ticket_id\": \"<из тикета>\",\n  \"type\": \"bug\",\n  \"service\": \"api\",\n  \"severity\": \"high\",\n  \"confidence\": 0.85,\n  \"action\": \"duplicate\",\n  \"assignee\": \"dmitry@taskflow.io\",\n  \"related_issue\": \"TF-102\",\n  \"summary\": \"Краткое описание на русском, 2-3 предложения.\"\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        752,
+        288
+      ],
+      "id": "6a56d2a6-f12f-40a4-878f-9b458e53ee88",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://mcp-filesystem:8081/mcp",
+        "tool": {
+          "__rl": true,
+          "value": "read_file",
+          "mode": "list",
+          "cachedResultName": "read_file"
+        },
+        "parameters": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "path": "=/data/docs/{{ $json.body.description.toLowerCase().includes('502') || $json.body.title.toLowerCase().includes('api') ? 'api.md' : ($json.body.description.toLowerCase().includes('save') || $json.body.title.toLowerCase().includes('save') ? 'web.md' : 'worker.md') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "path",
+              "displayName": "path",
+              "defaultMatch": false,
+              "required": true,
+              "display": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "tail",
+              "displayName": "tail",
+              "defaultMatch": false,
+              "required": false,
+              "display": true,
+              "type": "number",
+              "removed": true
+            },
+            {
+              "id": "head",
+              "displayName": "head",
+              "defaultMatch": false,
+              "required": false,
+              "display": true,
+              "type": "number",
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClient",
+      "typeVersion": 1.1,
+      "position": [
+        416,
+        288
+      ],
+      "id": "8adfe691-9095-4531-b0e6-d0a021e3fcd7",
+      "name": "read docs"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://mcp-filesystem:8081/mcp",
+        "tool": {
+          "__rl": true,
+          "value": "read_file",
+          "mode": "list",
+          "cachedResultName": "read_file"
+        },
+        "parameters": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "path": "/data/issues/open-issues.json"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "path",
+              "displayName": "path",
+              "defaultMatch": false,
+              "required": true,
+              "display": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "tail",
+              "displayName": "tail",
+              "defaultMatch": false,
+              "required": false,
+              "display": true,
+              "type": "number",
+              "removed": true
+            },
+            {
+              "id": "head",
+              "displayName": "head",
+              "defaultMatch": false,
+              "required": false,
+              "display": true,
+              "type": "number",
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClient",
+      "typeVersion": 1.1,
+      "position": [
+        576,
+        288
+      ],
+      "id": "017589d9-5131-4846-b8df-e6160002fa4a",
+      "name": "read issues"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://mcp-memory:8082/mcp",
+        "tool": {
+          "__rl": true,
+          "value": "create_entities",
+          "mode": "list",
+          "cachedResultName": "create_entities"
+        },
+        "parameters": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "entities": "={{ JSON.stringify($json.entities) }}"
+          },
+          "matchingColumns": [
+            "entities"
+          ],
+          "schema": [
+            {
+              "id": "entities",
+              "displayName": "entities",
+              "defaultMatch": false,
+              "required": true,
+              "display": true,
+              "type": "array",
+              "defaultValue": "[\n  {\n    \"name\": \"string\",\n    \"entityType\": \"string\",\n    \"observations\": [\n      \"string\"\n    ]\n  }\n]",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClient",
+      "typeVersion": 1.1,
+      "position": [
+        1264,
+        288
+      ],
+      "id": "ba4a1041-f5f1-472c-8cdc-f78c6ad9c0ba",
+      "name": "create entities"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://mcp-filesystem:8081/mcp",
+        "tool": {
+          "__rl": true,
+          "value": "write_file",
+          "mode": "list",
+          "cachedResultName": "write_file"
+        },
+        "parameters": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "path": "=/data/processed/{{ $('Webhook: новый тикет').item.json.body.ticket_id }}.json",
+            "content": "={{ JSON.stringify($('AI Agent').item.json.output, null, 2) }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "path",
+              "displayName": "path",
+              "defaultMatch": false,
+              "required": true,
+              "display": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "content",
+              "displayName": "content",
+              "defaultMatch": false,
+              "required": true,
+              "display": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClient",
+      "typeVersion": 1.1,
+      "position": [
+        1472,
+        288
+      ],
+      "id": "0a6361b1-91e1-4e6d-9beb-85d69ff03f58",
+      "name": "write file"
+    },
+    {
+      "parameters": {
+        "jsCode": "const output = $input.first().json.output;\nconst parsed = typeof output === 'string' ? JSON.parse(output) : output;\n\nconst entities = [{\n  name: parsed.ticket_id,\n  entityType: \"Ticket\",\n  observations: [\n    `type=${parsed.type}`,\n    `service=${parsed.service}`,\n    `severity=${parsed.severity}`,\n    `assignee=${parsed.assignee}`\n  ]\n}];\n\nreturn [{ json: { ticket: parsed, entities } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1072,
+        288
+      ],
+      "id": "cd08ab18-0389-48f2-91ca-e8cf6fc0dddf",
+      "name": "JSON parser"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook: новый тикет": {
+      "main": [
+        [
+          {
+            "node": "read docs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM: Qwen2.5-3B (Ollama)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "read docs": {
+      "main": [
+        [
+          {
+            "node": "read issues",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "read issues": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "JSON parser",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create entities": {
+      "main": [
+        [
+          {
+            "node": "write file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "write file": {
+      "main": [
+        [
+          {
+            "node": "Ответ клиенту",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JSON parser": {
+      "main": [
+        [
+          {
+            "node": "create entities",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "97869269-29b4-4003-8f17-e6275f10c32e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "547dc7c9282bf3083d9407799731cc175a18a124eb4942163bdd7bef78ffa2ab"
+  },
+  "nodeGroups": [],
+  "id": "ZslwEHiPkYSi1Msv",
+  "tags": []
+}
