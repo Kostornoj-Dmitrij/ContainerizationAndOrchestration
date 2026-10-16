@@ -17,6 +17,11 @@
     serviceMonitorNamespaceSelector: {}
     podMonitorNamespaceSelector: {}
     ruleNamespaceSelector: {}
+    additionalScrapeConfigs:
+      - job_name: cadvisor
+        scrape_interval: 15s
+        static_configs:
+          - targets: [ '192.168.1.108:8081' ]
 
 grafana:
   service:
@@ -120,3 +125,34 @@ additionalPrometheusRulesMap:
             annotations:
               summary: "api недоступен"
               description: "Prometheus не получает метрики ни от одного пода api - сервис полностью недоступен."
+      - name: container.rules
+        rules:
+          - alert: ContainerMemoryUsageHigh
+            expr: |
+              container_memory_working_set_bytes{name="api-docker"} > 200 * 1024 * 1024
+            for: 2m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Контейнер api-docker ест >200MB памяти"
+              description: "Рабочий набор страниц контейнера api-docker превышает 200 МБ больше 2 минут. При лимите 256 МБ это близко к OOMKilled."
+
+          - alert: ContainerCpuThrottlingHigh
+            expr: |
+              rate(container_cpu_cfs_throttled_seconds_total{name="api-docker"}[5m]) > 0.1
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Контейнер api-docker throttled ({{ $value | humanize }})"
+              description: "CFS throttling контейнера api-docker > 0.1 с/с в течение 5 минут. Контейнеру не хватает CPU-квоты."
+
+          - alert: ContainerDown
+            expr: |
+              absent(container_last_seen{name="api-docker"})
+            for: 1m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Контейнер api-docker недоступен"
+              description: "cAdvisor перестал видеть контейнер api-docker. Он упал, остановлен или узел потерял с ним связь."
