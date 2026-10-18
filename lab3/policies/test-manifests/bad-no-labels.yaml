@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bad-no-labels
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bad-no-labels
+  template:
+    metadata:
+      labels:
+        app: bad-no-labels
+    spec:
+      containers:
+        - name: app
+          image: docker.io/library/nginx:1.25
+          resources:
+            requests: { cpu: 100m, memory: 64Mi }
+            limits: { cpu: 200m, memory: 128Mi }
