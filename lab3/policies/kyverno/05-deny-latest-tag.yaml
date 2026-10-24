@@ -15,6 +15,18 @@ spec:
           - resources:
               kinds:
                 - Pod
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - kube-system
+                - kube-public
+                - kube-node-lease
+                - kyverno
+                - monitoring
+                - cnpg-system
+                - postgres-operator
+                - local-path-storage
       validate:
         message: "Using 'latest' tag or no tag is not allowed. Pin a specific version."
         foreach:

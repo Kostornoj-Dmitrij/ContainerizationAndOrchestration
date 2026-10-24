@@ -17,6 +17,18 @@ spec:
                 - Deployment
                 - StatefulSet
                 - DaemonSet
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - kube-system
+                - kube-public
+                - kube-node-lease
+                - kyverno
+                - monitoring
+                - cnpg-system
+                - postgres-operator
+                - local-path-storage
       validate:
         message: "Labels 'app.kubernetes.io/name' and 'app.kubernetes.io/part-of' are required."
         pattern:

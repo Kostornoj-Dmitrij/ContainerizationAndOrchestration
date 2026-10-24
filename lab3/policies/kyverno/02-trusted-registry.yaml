@@ -15,6 +15,18 @@ spec:
           - resources:
               kinds:
                 - Pod
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - kube-system
+                - kube-public
+                - kube-node-lease
+                - kyverno
+                - monitoring
+                - cnpg-system
+                - postgres-operator
+                - local-path-storage
       validate:
         message: "Only images from trusted sources are allowed (localhost/, shop-*, docker.io/library/)."
         foreach:
