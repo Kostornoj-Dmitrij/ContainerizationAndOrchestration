@@ -27,6 +27,10 @@ spec:
                 - cnpg-system
                 - postgres-operator
                 - local-path-storage
+          - resources:
+              selector:
+                matchLabels:
+                  cluster-name: shop-postgres
       validate:
         message: "Only images from trusted sources are allowed (localhost/, shop-*, docker.io/library/)."
         foreach:
