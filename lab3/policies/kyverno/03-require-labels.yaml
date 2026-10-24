@@ -26,9 +26,12 @@ spec:
                 - kube-node-lease
                 - kyverno
                 - monitoring
-                - cnpg-system
                 - postgres-operator
                 - local-path-storage
+          - resources:
+              selector:
+                matchLabels:
+                  application: shop-postgres
       validate:
         message: "Labels 'app.kubernetes.io/name' and 'app.kubernetes.io/part-of' are required."
         pattern:
