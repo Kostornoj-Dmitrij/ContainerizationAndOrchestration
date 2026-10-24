@@ -1,0 +1,28 @@
+apiVersion: acid.zalan.do/v1
+kind: postgresql
+metadata:
+  name: shop-postgres
+  labels:
+    app.kubernetes.io/name: shop-postgres
+    app.kubernetes.io/part-of: shop
+    application: shop-postgres
+spec:
+  teamId: shop
+  numberOfInstances: {{ .Values.postgres.instances }}
+  postgresql:
+    version: "16"
+  volume:
+    size: {{ .Values.postgres.storage.size }}
+  resources:
+    requests:
+      cpu: {{ .Values.postgres.resources.requests.cpu }}
+      memory: {{ .Values.postgres.resources.requests.memory }}
+    limits:
+      cpu: {{ .Values.postgres.resources.limits.cpu }}
+      memory: {{ .Values.postgres.resources.limits.memory }}
+  users:
+    {{ .Values.db.user }}:
+      - superuser
+      - createdb
+  databases:
+    {{ .Values.db.name }}: {{ .Values.db.user }}
