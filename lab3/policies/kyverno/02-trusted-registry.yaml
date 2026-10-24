@@ -41,3 +41,4 @@ spec:
                       - "shop-*"
                       - "shop-*:*"
                       - "docker.io/library/*"
+                      - "registry.opensource.zalan.do/*"

@@ -32,6 +32,10 @@ spec:
               selector:
                 matchLabels:
                   application: shop-postgres
+          - resources:
+              selector:
+                matchLabels:
+                  cluster-name: shop-postgres
       validate:
         message: "Labels 'app.kubernetes.io/name' and 'app.kubernetes.io/part-of' are required."
         pattern:
