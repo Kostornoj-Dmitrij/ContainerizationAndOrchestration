@@ -23,8 +23,10 @@ spec:
               conditions:
                 any:
                   - key: "{{ element.image }}"
-                    operator: Matches
-                    value: ".*:latest$"
+                    operator: AnyIn
+                    value:
+                      - "*:latest"
                   - key: "{{ element.image }}"
-                    operator: NotMatches
-                    value: ".*:.*"
+                    operator: NotIn
+                    value:
+                      - "*:*"
