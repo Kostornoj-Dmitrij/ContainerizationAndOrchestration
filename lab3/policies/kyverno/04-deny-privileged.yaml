@@ -24,4 +24,4 @@ spec:
                 any:
                   - key: "{{ element.securityContext.privileged || 'false' }}"
                     operator: Equals
-                    value: "true"
+                    value: true
