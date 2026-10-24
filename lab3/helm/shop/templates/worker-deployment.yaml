@@ -34,4 +34,5 @@ spec:
               value: {{ .Values.db.user | quote }}
             - name: DB_PASSWORD
               value: {{ .Values.db.password | quote }}
-          resources: {{ toYaml .Values.worker.resources | indent 12 }}
+          resources:
+          {{ toYaml .Values.worker.resources | indent 12 }}
